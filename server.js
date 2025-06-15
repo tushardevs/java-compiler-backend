@@ -1,31 +1,29 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
+const express = require("express");
+const fs = require("fs");
+const { exec } = require("child_process");
+const path = require("path");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const clientId = 'YOUR_CLIENT_ID';
-const clientSecret = 'YOUR_CLIENT_SECRET';
+app.post("/run-java", (req, res) => {
+  const code = req.body.code;
+  const javaFile = "Main.java";
 
-app.post('/compile', async (req, res) => {
-  try {
-    const { code } = req.body;
+  fs.writeFileSync(javaFile, code);
 
-    const response = await axios.post('https://api.jdoodle.com/v1/execute', {
-      script: code,
-      language: "java",
-      versionIndex: "3",
-      clientId,
-      clientSecret
-    });
+  const dockerCmd = `docker run --rm -v ${__dirname}:/usr/src/myapp -w /usr/src/myapp openjdk:17 javac Main.java && docker run --rm -v ${__dirname}:/usr/src/myapp -w /usr/src/myapp openjdk:17 java Main`;
 
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to execute code' });
-  }
+  exec(dockerCmd, { timeout: 5000 }, (err, stdout, stderr) => {
+    if (err) {
+      res.json({ output: stderr || err.message });
+    } else {
+      res.json({ output: stdout });
+    }
+  });
 });
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
