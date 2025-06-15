@@ -14,9 +14,9 @@ app.post("/run-java", (req, res) => {
 
   fs.writeFileSync(javaFile, code);
 
-  const dockerCmd = `docker run --rm -v ${__dirname}:/usr/src/myapp -w /usr/src/myapp openjdk:17 javac Main.java && docker run --rm -v ${__dirname}:/usr/src/myapp -w /usr/src/myapp openjdk:17 java Main`;
+  const compileAndRunCmd = 'javac Main.java && java Main';
 
-  exec(dockerCmd, { timeout: 5000 }, (err, stdout, stderr) => {
+  exec(compileAndRunCmd, { timeout: 5000 }, (err, stdout, stderr) => {
     if (err) {
       res.json({ output: stderr || err.message });
     } else {
