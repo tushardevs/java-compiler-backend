@@ -26,7 +26,6 @@ app.post("/run-java", (req, res) => {
     return res.status(500).json({ output: "❌ File write error: " + err.message });
   }
 
-  // Explicitly compile and run from current directory
   const compileCmd = `javac ${JAVA_FILE}`;
   const runCmd = `java -cp . ${CLASS_NAME}`;
   const fullCmd = `${compileCmd} && ${runCmd}`;
