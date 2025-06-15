@@ -10,15 +10,16 @@ app.use(cors());
 
 app.post('/compile', (req, res) => {
   const code = req.body.code;
-  fs.writeFileSync('Main.java', code);
+  const filePath = path.join(__dirname, 'Main.java');
+  fs.writeFileSync(filePath, code);
 
-  const command = `
-    docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp openjdk \
-    bash -c "javac Main.java && java Main"
-  `;
+  // Compile and run using system-installed Java
+  const command = `javac Main.java && java Main`;
 
-  exec(command, (error, stdout, stderr) => {
-    if (error) return res.json({ error: stderr });
+  exec(command, { cwd: __dirname }, (error, stdout, stderr) => {
+    if (error) {
+      return res.json({ error: stderr || 'Compilation or Runtime Error' });
+    }
     res.json({ output: stdout });
   });
 });
