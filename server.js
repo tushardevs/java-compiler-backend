@@ -1,28 +1,31 @@
 const express = require('express');
-const fs = require('fs');
-const { exec } = require('child_process');
-const path = require('path');
 const cors = require('cors');
+const axios = require('axios');
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-app.post('/compile', (req, res) => {
-  const code = req.body.code;
-  const filePath = path.join(__dirname, 'Main.java');
-  fs.writeFileSync(filePath, code);
+const clientId = 'YOUR_CLIENT_ID';
+const clientSecret = 'YOUR_CLIENT_SECRET';
 
-  // Compile and run using system-installed Java
-  const command = `javac Main.java && java Main`;
+app.post('/compile', async (req, res) => {
+  try {
+    const { code } = req.body;
 
-  exec(command, { cwd: __dirname }, (error, stdout, stderr) => {
-    if (error) {
-      return res.json({ error: stderr || 'Compilation or Runtime Error' });
-    }
-    res.json({ output: stdout });
-  });
+    const response = await axios.post('https://api.jdoodle.com/v1/execute', {
+      script: code,
+      language: "java",
+      versionIndex: "3",
+      clientId,
+      clientSecret
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to execute code' });
+  }
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
