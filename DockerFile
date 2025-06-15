@@ -2,8 +2,12 @@ FROM node:18
 
 WORKDIR /app
 
-COPY . .
-
+COPY package*.json ./
 RUN npm install
 
-CMD ["node", "server.js"]
+COPY . .
+
+RUN apt update && apt install -y docker.io
+
+EXPOSE 3000
+CMD [ "npm", "start" ]
